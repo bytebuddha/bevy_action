@@ -1,0 +1,11 @@
+{
+    LeftMouse: [
+        Pressed(Mouse(Left))
+    ],
+    RightMouse: [
+        JustPressed(Mouse(Right))
+    ],
+    GamepadSouth: [
+        JustPressed(Gamepad(0, South))
+    ]
+}

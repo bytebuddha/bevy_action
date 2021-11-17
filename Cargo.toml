@@ -1,0 +1,10 @@
+[package]
+name = "bevy_actions"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = "*"
+anyhow = "*"
+bevy_actions_derive = { path = "derive" }
+bevy = { version = "0.5.0", features = ["serialize"] }
