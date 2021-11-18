@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ron = "*"
 serde = "*"
 anyhow = "*"
 bevy_actions_derive = { path = "derive" }
