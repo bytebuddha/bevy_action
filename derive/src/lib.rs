@@ -116,6 +116,17 @@ fn get_default_implementation(input: &syn::ItemEnum) -> proc_macro2::TokenStream
                                         Pressed(bevy_actions::Button::Mouse(MouseButton::#code))
                                     });
                                 },
+                                "Gamepad" => {
+                                    let gamepad = attrs.nested.first().unwrap();
+                                    let axis = attrs.nested.iter().skip(1).next().unwrap();
+                                    let bevy_crate = match find_crate(|s| s == "bevy") {
+                                        Ok(_) => quote! {bevy::input},
+                                        Err(_) => quote ! {bevy_input}
+                                    };
+                                    event_attr.push(quote! {
+                                        Pressed(bevy_actions::Button::Gamepad(#gamepad, #bevy_crate::gamepad::GamepadButtonType::#axis))
+                                    });
+                                },
                                 _ => {}
                             }
                         },
@@ -131,6 +142,17 @@ fn get_default_implementation(input: &syn::ItemEnum) -> proc_macro2::TokenStream
                                     let code = attrs.nested.first().unwrap();
                                     event_attr.push(quote! {
                                         JustPressed(bevy_actions::Button::Mouse(MouseButton::#code))
+                                    });
+                                },
+                                "Gamepad" => {
+                                    let gamepad = attrs.nested.first().unwrap();
+                                    let axis = attrs.nested.iter().skip(1).next().unwrap();
+                                    let bevy_crate = match find_crate(|s| s == "bevy") {
+                                        Ok(_) => quote! {bevy::input},
+                                        Err(_) => quote ! {bevy_input}
+                                    };
+                                    event_attr.push(quote! {
+                                        JustPressed(bevy_actions::Button::Gamepad(#gamepad, #bevy_crate::gamepad::GamepadButtonType::#axis))
                                     });
                                 },
                                 _ => {}
@@ -176,7 +198,6 @@ fn get_default_implementation(input: &syn::ItemEnum) -> proc_macro2::TokenStream
             #(#variants)*
             map
         };
-        println!("{}", output);
         output.into()
     }
 }

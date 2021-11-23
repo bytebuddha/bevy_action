@@ -7,7 +7,8 @@ use bevy::input::gamepad::{GamepadButtonType, GamepadAxisType};
 pub enum Event {
     Pressed(Button),
     JustPressed(Button),
-    Axis(Axis)
+    Value(Button),
+    Axis(Axis),
 }
 
 #[derive(Debug, PartialEq, Clone, Eq, Hash, Serialize, Deserialize)]

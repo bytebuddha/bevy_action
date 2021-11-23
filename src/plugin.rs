@@ -66,6 +66,18 @@ fn handle_keyboard_button_input<A: ConfigActions>(
                     },
                     _ => {}
                 },
+                Event::Value(btn) => match btn {
+                    Button::Keyboard(code) => {
+                        if input.pressed(*code) {
+                            actions.data.insert(*action, Some(1.0));
+                        } else {
+                            if actions.data.contains_key(action) {
+                                actions.data.remove(action);
+                            }
+                        }
+                    },
+                    _ => {}
+                },
                 _ => {}
             }
         }
@@ -104,6 +116,18 @@ fn handle_mouse_button_input<A: ConfigActions>(
                     },
                     _ => {}
                 },
+                Event::Value(btn) => match btn {
+                    Button::Mouse(code) => {
+                        if input.pressed(*code) {
+                            actions.data.insert(*action, Some(1.0));
+                        } else {
+                            if actions.data.contains_key(action) {
+                                actions.data.remove(action);
+                            }
+                        }
+                    },
+                    _ => {}
+                },
                 _ => {}
             }
         }
@@ -131,7 +155,7 @@ fn handle_mouse_axis_input<A: ConfigActions>(
                     if actions.data.contains_key(action) {
                         actions.data.remove(action);
                     }
-                } else {                    
+                } else {
                     actions.data.insert(*action, Some(delta.y));
                 }
             }
@@ -196,6 +220,17 @@ fn handle_gamepad_axis_input<A: ConfigActions>(
                         }
                     }
                 },
+                GamepadEventType::ButtonChanged(btn, value) => {
+                    if let Some(action) = config.data.get(&Event::Value(Button::Gamepad(gamepad.0, *btn))) {
+                        if *value == 0.0 {
+                            if actions.data.contains_key(action) {
+                                actions.data.remove(action);
+                            }
+                        } else {
+                            actions.data.insert(*action, Some(*value));
+                        }
+                    }
+                }
                 _ => {}
             }
         }

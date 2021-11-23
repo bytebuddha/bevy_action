@@ -8,25 +8,12 @@ use bevy::utils::HashMap;
 )]
 pub enum SimpleActions {
     #[Pressed(Keyboard(Q))]
-    ActionQ,
     #[Pressed(Keyboard(W))]
-    ActionW,
     #[Pressed(Keyboard(E))]
-    ActionE,
     #[Pressed(Keyboard(R))]
-    ActionR,
     #[Pressed(Keyboard(T))]
-    ActionT,
     #[Pressed(Keyboard(Y))]
-    ActionY,
-    #[Pressed(Keyboard(U))]
-    ActionU,
-    #[Pressed(Keyboard(I))]
-    ActionI,
-    #[Pressed(Keyboard(O))]
-    ActionO,
-    #[Pressed(Keyboard(P))]
-    ActionP,
+    Qwerty,
     #[Pressed(Mouse(Left))]
     LeftMouse,
     #[JustPressed(Mouse(Right))]
