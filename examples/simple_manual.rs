@@ -19,7 +19,10 @@ pub enum SimpleActions {
     ActionP,
     LeftMouse,
     RightMouse,
-    GamepadSouth
+    GamepadSouth,
+    MouseX,
+    MouseY,
+    LeftStickX
 }
 
 impl ConfigActions for SimpleActions {
@@ -38,6 +41,9 @@ impl ConfigActions for SimpleActions {
         map.insert(Event::Pressed(bevy_actions::Button::Keyboard(KeyCode::O)), SimpleActions::ActionO);
         map.insert(Event::Pressed(bevy_actions::Button::Keyboard(KeyCode::P)), SimpleActions::ActionP);
         map.insert(Event::Pressed(bevy_actions::Button::Gamepad(0, GamepadButtonType::South)), SimpleActions::GamepadSouth);
+        map.insert(Event::Axis(bevy_actions::Axis::Mouse(MouseAxis::X)), SimpleActions::MouseX);
+        map.insert(Event::Axis(bevy_actions::Axis::Mouse(MouseAxis::Y)), SimpleActions::MouseY);
+        map.insert(Event::Axis(bevy_actions::Axis::Gamepad(0, GamepadAxisType::LeftStickX)), SimpleActions::LeftStickX);
         map
     }
 }

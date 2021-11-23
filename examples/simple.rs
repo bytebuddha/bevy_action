@@ -34,7 +34,13 @@ pub enum SimpleActions {
     #[JustPressed(Mouse(Middle))]
     MiddleMouse,
     #[JustPressed(Gamepad(0, South))]
-    GamepadSouth
+    GamepadSouth,
+    #[Axis(Mouse(X))]
+    MouseX,
+    #[Axis(Mouse(Y))]
+    MouseY,
+    #[Axis(Gamepad(0, LeftStickX))]
+    LeftStickX
 }
 
 fn main() {

@@ -7,7 +7,7 @@ pub use bevy_actions_derive::*;
 use serde::{ Serialize, de::DeserializeOwned };
 
 mod event;
-pub use self::event::{Button, Event};
+pub use self::event::{Button, Event, Axis, MouseAxis};
 
 mod plugin;
 pub use self::plugin::ConfigActionsPlugin;

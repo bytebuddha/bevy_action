@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use bevy::asset::AssetServer;
 use bevy::app::{Plugin, AppBuilder};
-use crate::{ Event, Button, ConfigActions, Actions, ActionsConfig, ConfigActionsLoader };
+use bevy::input::mouse::MouseMotion;
+use crate::{ Event, Axis, Button, MouseAxis, ConfigActions, Actions, ActionsConfig, ConfigActionsLoader };
 
 pub struct ConfigActionsPlugin<A: ConfigActions>(std::marker::PhantomData<A>);
 
@@ -17,9 +18,11 @@ impl <A: ConfigActions>Plugin for ConfigActionsPlugin<A> {
             .add_asset_loader(ConfigActionsLoader::<A>::default())
             .init_resource::<Actions<A>>()
             .add_startup_system(initialize::<A>.system())
-            .add_system(handle_keyboard_input::<A>.system())
-            .add_system(handle_mouse_input::<A>.system())
-            .add_system(handle_gamepad_input::<A>.system());
+            .add_system(handle_keyboard_button_input::<A>.system())
+            .add_system(handle_mouse_button_input::<A>.system())
+            .add_system(handle_mouse_axis_input::<A>.system())
+            .add_system(handle_gamepad_button_input::<A>.system())
+            .add_system(handle_gamepad_axis_input::<A>.system());
     }
 }
 
@@ -30,7 +33,7 @@ fn initialize<A: ConfigActions>(
     res.handle = assets.load(A::PATH);
 }
 
-fn handle_keyboard_input<A: ConfigActions>(
+fn handle_keyboard_button_input<A: ConfigActions>(
     input: Res<Input<KeyCode>>,
     mut actions: ResMut<Actions<A>>,
     configs: Res<Assets<ActionsConfig<A>>>,
@@ -62,13 +65,14 @@ fn handle_keyboard_input<A: ConfigActions>(
                         }
                     },
                     _ => {}
-                }
+                },
+                _ => {}
             }
         }
     }
 }
 
-fn handle_mouse_input<A: ConfigActions>(
+fn handle_mouse_button_input<A: ConfigActions>(
     input: Res<Input<MouseButton>>,
     mut actions: ResMut<Actions<A>>,
     configs: Res<Assets<ActionsConfig<A>>>
@@ -99,13 +103,43 @@ fn handle_mouse_input<A: ConfigActions>(
                         }
                     },
                     _ => {}
+                },
+                _ => {}
+            }
+        }
+    }
+}
+
+fn handle_mouse_axis_input<A: ConfigActions>(
+    mut actions: ResMut<Actions<A>>,
+    mut input: EventReader<MouseMotion>,
+    mut configs: ResMut<Assets<ActionsConfig<A>>>
+) {
+    if let Some(config) = configs.get_mut(actions.handle.clone()) {
+        for MouseMotion { delta } in input.iter() {
+            if let Some(action) = config.data.get(&Event::Axis(Axis::Mouse(MouseAxis::X))) {
+                if delta.x == 0.0 {
+                    if actions.data.contains_key(action) {
+                        actions.data.remove(action);
+                    }
+                } else {
+                    actions.data.insert(*action, Some(delta.x));
+                }
+            }
+            if let Some(action) = config.data.get(&Event::Axis(Axis::Mouse(MouseAxis::Y))) {
+                if delta.y == 0.0 {
+                    if actions.data.contains_key(action) {
+                        actions.data.remove(action);
+                    }
+                } else {                    
+                    actions.data.insert(*action, Some(delta.y));
                 }
             }
         }
     }
 }
 
-fn handle_gamepad_input<A: ConfigActions>(
+fn handle_gamepad_button_input<A: ConfigActions>(
     mut actions: ResMut<Actions<A>>,
     input: Res<Input<GamepadButton>>,
     configs: Res<Assets<ActionsConfig<A>>>
@@ -136,7 +170,33 @@ fn handle_gamepad_input<A: ConfigActions>(
                         }
                     },
                     _ => {}
-                }
+                },
+                _ => {}
+            }
+        }
+    }
+}
+
+fn handle_gamepad_axis_input<A: ConfigActions>(
+    mut actions: ResMut<Actions<A>>,
+    mut input: EventReader<GamepadEvent>,
+    configs: Res<Assets<ActionsConfig<A>>>
+) {
+    if let Some(config) = configs.get(actions.handle.clone()) {
+        for GamepadEvent(gamepad, event) in input.iter() {
+            match event {
+                GamepadEventType::AxisChanged(axis, value) => {
+                    if let Some(action) = config.data.get(&Event::Axis(Axis::Gamepad(gamepad.0, *axis))) {
+                        if *value == 0.0 {
+                            if actions.data.contains_key(action) {
+                                actions.data.remove(action);
+                            }
+                        } else {
+                            actions.data.insert(*action, Some(*value));
+                        }
+                    }
+                },
+                _ => {}
             }
         }
     }
