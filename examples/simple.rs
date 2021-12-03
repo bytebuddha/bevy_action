@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_actions::*;
-use bevy::utils::HashMap;
 
 #[config_actions(
     file = "simple.ron",

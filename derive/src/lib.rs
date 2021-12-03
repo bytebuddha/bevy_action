@@ -4,54 +4,107 @@ use find_crate::find_crate;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 
+#[derive(Debug)]
+struct CrateLocations {
+    serde: String,
+    bevy: Option<String>,
+    bevy_reflect: Option<String>,
+    bevy_utils: Option<String>
+}
+
+impl CrateLocations {
+
+    fn find() -> CrateLocations {
+        let locations = CrateLocations {
+            serde: find_crate(|x| x.contains("serde"))
+                .map(|x|x.name)
+                .expect("Failed to find serde crate"),
+            bevy: find_crate(|x| x.contains("bevy"))
+                .map(|x|x.name)
+                .ok(),
+            bevy_reflect: find_crate(|x| x.contains("bevy_reflect"))
+                .map(|x|x.name)
+                .ok(),
+            bevy_utils: find_crate(|x| x.contains("bevy_utils"))
+                .map(|x|x.name)
+                .ok()
+        };
+        if locations.bevy.is_none() {
+            if locations.bevy_reflect.is_none() && locations.bevy_utils.is_none() {
+                panic!("Requires either bevy or bevy_reflect and bevy_utils crate.");
+            }
+        }
+        locations
+    }
+
+    fn hashmap(&self) -> proc_macro2::TokenStream {
+        match &self.bevy {
+            Some(bevy) => {
+                let ident = syn::Ident::new(&bevy, Span::call_site());
+                quote! { #ident::utils::HashMap }
+            },
+            None => {
+                let reflect = self.bevy_utils.as_ref().unwrap();
+                let ident = syn::Ident::new(&reflect, Span::call_site());
+                quote! { #ident::HashMap }
+            }
+        }
+    }
+
+    fn typeuuid(&self) -> proc_macro2::TokenStream {
+        match &self.bevy {
+            Some(bevy)=> {
+                 let ident = syn::Ident::new(&bevy, Span::call_site());
+                quote! { #ident::reflect::TypeUuid }
+            },
+            None => {
+                let reflect = self.bevy_reflect.as_ref().unwrap();
+                let reflect = syn::Ident::new(&reflect, Span::call_site());
+                quote! { #reflect::TypeUuid }
+            }
+        }
+    }
+
+
+}
+
 #[proc_macro_derive(ConfigActions, attributes(Pressed, JustPressed, Axis))]
 pub fn derive_macro(_input: TokenStream) -> TokenStream {
     let output = quote! {};
+    println!("{}", output);
     output.into()
 }
 
 #[proc_macro_attribute]
 pub fn config_actions(attr: TokenStream, item: TokenStream) -> TokenStream {
+     let locations = CrateLocations::find();
      let item_enum = syn::parse_macro_input!(item as syn::ItemEnum);
-     let bevy_crate = find_crate(|s| s == "bevy");
-     let bevy_reflect_crate = find_crate(|s| s == "bevy_reflect");
-     let serde_crate = find_crate(|x|x == "serde").unwrap().name;
-     let serde_crate = syn::Ident::new(&serde_crate, Span::call_site());
+     let serde_crate = syn::Ident::new(&locations.serde, Span::call_site());
+     let hmap = locations.hashmap();
+     let typeuuid = locations.typeuuid();
 
      let ident = &item_enum.ident;
 
-     let type_uuid_derive = if bevy_crate.is_ok() {
-         let name = bevy_crate.unwrap().name;
-         let name = syn::Ident::new(&name, Span::call_site());
-         quote! { #[derive(#name::reflect::TypeUuid)] }
-     } else if bevy_reflect_crate.is_ok() {
-         let name = bevy_reflect_crate.unwrap().name;
-         let name = syn::Ident::new(&name, Span::call_site());
-         quote! { #[derive(#name::TypeUuid)]}
-     } else {
-         return quote! {compile_error!("Unable to find either the bevy or bevy_reflect crates")}.into();
-     };
-
-     let default_impl = get_default_implementation(&item_enum);
+     let default_impl = get_default_implementation(&item_enum, hmap.clone());
 
      match attribute_inputs(parse_macro_input!(attr as AttributeArgs)) {
          Err(err) => return err,
          Ok((file, uuid)) => {
              let output = quote! {
                  #[derive(Debug, PartialEq, Clone, Copy, Eq, Hash, ConfigActions)]
-                 #[derive(#serde_crate::Serialize, #serde_crate::Deserialize)]
-                 #type_uuid_derive
+                 #[derive(#serde_crate::Serialize, #serde_crate::Deserialize, #typeuuid)]
                  #[uuid = #uuid]
                  #item_enum
 
                  impl bevy_actions::ConfigActions for #ident {
                      const PATH: &'static str = #file;
 
-                     fn default_bindings() -> HashMap<bevy_actions::Event, Self> {
+                     fn default_bindings() -> #hmap<bevy_actions::Event, Self> {
                          #default_impl
                      }
                  }
              };
+             println!();
              output.into()
          }
      }
@@ -85,7 +138,7 @@ fn attribute_inputs(args: Vec<NestedMeta>) -> std::result::Result<(Lit, Lit), To
     Ok(output)
 }
 
-fn get_default_implementation(input: &syn::ItemEnum) -> proc_macro2::TokenStream {
+fn get_default_implementation(input: &syn::ItemEnum, hmap: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     use std::str::FromStr;
     let mut variants = vec![];
     let enum_ident = &input.ident;
@@ -190,11 +243,11 @@ fn get_default_implementation(input: &syn::ItemEnum) -> proc_macro2::TokenStream
         }
     }
     if variants.is_empty() {
-        let output = quote! { HashMap::default() };
+        let output = quote! { #hmap::default() };
         output.into()
     } else {
         let output = quote! {
-            let mut map = HashMap::default();
+            let mut map = #hmap::default();
             #(#variants)*
             map
         };
