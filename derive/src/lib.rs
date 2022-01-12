@@ -71,13 +71,13 @@ impl CrateLocations {
 #[proc_macro_derive(ConfigActions, attributes(Pressed, JustPressed, Axis))]
 pub fn derive_macro(_input: TokenStream) -> TokenStream {
     let output = quote! {};
-    println!("{}", output);
     output.into()
 }
 
 #[proc_macro_attribute]
 pub fn config_actions(attr: TokenStream, item: TokenStream) -> TokenStream {
      let locations = CrateLocations::find();
+    println!("{:?}", locations);
      let item_enum = syn::parse_macro_input!(item as syn::ItemEnum);
      let serde_crate = syn::Ident::new(&locations.serde, Span::call_site());
      let hmap = locations.hashmap();
@@ -104,7 +104,7 @@ pub fn config_actions(attr: TokenStream, item: TokenStream) -> TokenStream {
                      }
                  }
              };
-             println!();
+             println!("{}", output);
              output.into()
          }
      }

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::asset::AssetServer;
-use bevy::app::{Plugin, AppBuilder};
+use bevy::app::{Plugin, App};
 use bevy::input::mouse::MouseMotion;
 use crate::{ Event, Axis, Button, MouseAxis, ConfigActions, Actions, ActionsConfig, ConfigActionsLoader };
 
@@ -13,16 +13,16 @@ impl <A: ConfigActions>Default for ConfigActionsPlugin<A> {
 }
 
 impl <A: ConfigActions>Plugin for ConfigActionsPlugin<A> {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_asset::<ActionsConfig<A>>()
             .add_asset_loader(ConfigActionsLoader::<A>::default())
             .init_resource::<Actions<A>>()
-            .add_startup_system(initialize::<A>.system())
-            .add_system(handle_keyboard_button_input::<A>.system())
-            .add_system(handle_mouse_button_input::<A>.system())
-            .add_system(handle_mouse_axis_input::<A>.system())
-            .add_system(handle_gamepad_button_input::<A>.system())
-            .add_system(handle_gamepad_axis_input::<A>.system());
+            .add_startup_system(initialize::<A>)
+            .add_system(handle_keyboard_button_input::<A>)
+            .add_system(handle_mouse_button_input::<A>)
+            .add_system(handle_mouse_axis_input::<A>)
+            .add_system(handle_gamepad_button_input::<A>)
+            .add_system(handle_gamepad_axis_input::<A>);
     }
 }
 

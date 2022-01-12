@@ -7,8 +7,8 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-syn = "*"
-ron = "*"
-quote = "*"
-find-crate = "*"
-proc-macro2 = "*"
+syn = "1.0.85"
+ron = "0.7.0"
+quote = "1.0.14"
+find-crate = "0.6.3"
+proc-macro2 = "1.0.36"

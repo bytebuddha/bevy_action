@@ -49,10 +49,10 @@ impl ConfigActions for SimpleActions {
 }
 
 fn main() {
-    App::build()
+    App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(ConfigActionsPlugin::<SimpleActions>::default())
-        .add_system(print_action.system())
+        .add_system(print_action)
         .run()
 }
 
